@@ -1,5 +1,4 @@
 test.ipynb
 **__pycache__/
 **.DS_Store
-src/scraper/adblocker.crx
 src/video_quality_eval/deep_learning/simpleVQA/ckpts/UGC_BVQA_model.pth

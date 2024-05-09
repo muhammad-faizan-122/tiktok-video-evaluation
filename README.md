@@ -48,6 +48,7 @@ Use of traditional and deep learning algorithm to check the quality of each down
     ```
 - Download the SimpleVQA pre-trained model using following command.
     ```
+    mkdir src/video_quality_eval/deep_learning/simpleVQA/ckpts/
     gdown -O src/video_quality_eval/deep_learning/simpleVQA/ckpts/UGC_BVQA_model.pth 137XJdq3reNMJ9tkBNqKUYTY_dTlcwXc3
     ```
 

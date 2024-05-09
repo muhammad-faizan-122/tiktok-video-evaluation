@@ -16,8 +16,6 @@ def create_browser_options():
     """
 
     options = Options()
-    options.add_extension("src/scraper/adblocker.crx")
-
     options.add_argument("start-maximized")
     options.add_argument("disable-infobars")
     options.add_argument("--disable-extensions")
