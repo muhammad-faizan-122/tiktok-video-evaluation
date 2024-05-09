@@ -42,7 +42,7 @@ def evaluate_videos_quality():
         lap_score, lap_res = laplacian_video_quality(video_path)
         ss_score, ss_res = structural_similarity_video_quality(video_path)
         psnr_score, psnr_res = psnr_video_quality(video_path)
-        simple_vqa_infer(video_path)
+        vqa_score = simple_vqa_infer(video_path)
 
         video_quality = {
             video: {
@@ -57,6 +57,9 @@ def evaluate_videos_quality():
                 "peak_signal_to_noise_ratio": {
                     "quality_score": psnr_score,
                     "quality": psnr_res,
+                },
+                "simple_VQA": {
+                    "quality_score": vqa_score,
                 },
             }
         }

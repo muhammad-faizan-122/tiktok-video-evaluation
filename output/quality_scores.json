@@ -1,33 +1,39 @@
 [
     {
-        "ssstik.io_1715156633074.mp4": {
+        "ssstik.io_1715088915412.mp4": {
             "laplacian": {
-                "quality_score": 53.257578720245895,
+                "quality_score": 59.98154183404597,
                 "quality": "Blur"
             },
             "structural_similarty": {
-                "quality_score": 0.7905307352416306,
+                "quality_score": 0.8291249701197512,
                 "quality": "Clear"
             },
             "peak_signal_to_noise_ratio": {
-                "quality_score": 32.663645218665536,
+                "quality_score": 34.3523784804674,
                 "quality": "Clear"
+            },
+            "simple_VQA": {
+                "quality_score": 3.3710782527923584
             }
         }
     },
     {
-        "ssstik.io_1715156596076.mp4": {
+        "ssstik.io_1715098184865.mp4": {
             "laplacian": {
-                "quality_score": 25.011922787196852,
+                "quality_score": 42.838168559360426,
                 "quality": "Blur"
             },
             "structural_similarty": {
-                "quality_score": 0.8358675813388196,
+                "quality_score": 0.9100019930150027,
                 "quality": "Clear"
             },
             "peak_signal_to_noise_ratio": {
-                "quality_score": 32.46371983910255,
+                "quality_score": 37.325759379654336,
                 "quality": "Clear"
+            },
+            "simple_VQA": {
+                "quality_score": 3.299133539199829
             }
         }
     }

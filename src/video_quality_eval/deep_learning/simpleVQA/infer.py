@@ -6,7 +6,6 @@ import src.video_quality_eval.deep_learning.simpleVQA.ugc_bvqa_model as UGC_BVQA
 import torch
 import torch.nn as nn
 import cv2
-import os
 
 
 def video_processing_spatial(dist):
@@ -248,13 +247,10 @@ def simple_vqa_infer(video_path):
                 feature_motion[idx] = ele_feature_motion
 
             feature_motion = feature_motion.unsqueeze(dim=0)
-            print(feature_motion.shape)
-            print(video_dist_spatial.shape)
             outputs = model(video_dist_spatial, feature_motion)
-            print("output: ", outputs)
             y_val = outputs.item()
 
-            print("The video name: " + video_name)
-            print("The quality socre: {:.4f}".format(y_val))
+            return y_val
+
     except Exception as e:
-        print(e)
+        return e
