@@ -7,3 +7,4 @@ opencv-python==4.9.0.80
 beautifulsoup4==4.12.3
 scikit-image==0.21.0
 selenium==4.20.0
+gdown==5.1.0
