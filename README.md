@@ -7,7 +7,7 @@ Pipeline can be divided into parts
 - Scraping and dowloading tiktok videos
 - Quality evaluation of each downloaded video
 
-![alt text](diagram/block_diagram.png)
+![alt text](diagram/block_diagram.drawio)
 
 ### Scraping and dowloading tiktok videos
 I have utilized the selenium and beautiful soap libraries of Python to automate scraping and downloading TikTok videos. A Captcha appears at the start of scraping, which need to solve manually within 30 seconds.
