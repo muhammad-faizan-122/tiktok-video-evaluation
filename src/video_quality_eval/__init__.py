@@ -1,11 +1,11 @@
 from constants.scraper.constants import DOWNLOADED_VIDS_DIR
 from constants.video_quality_eval.constants import OUT_PATH
+from src.video_quality_eval.deep_learning.simpleVQA.infer import simple_vqa_infer
 from src.video_quality_eval.traditional.video_quality_eval import (
     laplacian_video_quality,
     structural_similarity_video_quality,
     psnr_video_quality,
 )
-from src.video_quality_eval.deep_learning.simpleVQA.infer import simple_vqa_infer
 import os
 import json
 
@@ -22,7 +22,12 @@ def save_json(data, file_path):
         json.dump(data, json_file, indent=4)
 
 
-def assess_videos_quality():
+def evaluate_videos_quality():
+    """
+    Evaluates the quality of downloaded videos using various metrics such as Laplacian, Structural Similarity Index, and Peak Signal-to-Noise Ratio (PSNR).
+
+    The function iterates through each downloaded video in the specified directory, calculates quality scores using the mentioned metrics, and saves the metadata in a JSON file.
+    """
     videos_qualities_metadata = []
     videos = os.listdir(DOWNLOADED_VIDS_DIR)
     for video_id, video in enumerate(videos):
@@ -37,6 +42,7 @@ def assess_videos_quality():
         lap_score, lap_res = laplacian_video_quality(video_path)
         ss_score, ss_res = structural_similarity_video_quality(video_path)
         psnr_score, psnr_res = psnr_video_quality(video_path)
+        simple_vqa_infer(video_path)
 
         video_quality = {
             video: {

@@ -508,10 +508,7 @@ if __name__ == "__main__":
     input_3D = torch.randn(8, 8, 2048 + 256)
     flops, params = profile(
         model,
-        inputs=(
-            input,
-            input_3D,
-        ),
+        inputs=(input, input_3D),
     )
     flops, params = clever_format([flops, params], "%.3f")
 

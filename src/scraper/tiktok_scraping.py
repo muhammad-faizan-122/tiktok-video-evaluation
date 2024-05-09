@@ -11,9 +11,15 @@ import random
 
 
 def create_browser_options():
+    """
+    Creates and returns browser options for Chrome, pre-configured with various settings to optimize web scraping.
+    """
+
     options = Options()
-    options.add_argument("--start-maximized")
-    options.add_argument("--disable-infobars")
+    options.add_extension("src/scraper/adblocker.crx")
+
+    options.add_argument("start-maximized")
+    options.add_argument("disable-infobars")
     options.add_argument("--disable-extensions")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-gpu")
@@ -28,12 +34,30 @@ def create_browser_options():
 
 
 def open_url(url):
+    """
+    Opens the specified URL in a Chrome browser.
+
+    Args:
+    url (str): The URL to open.
+
+    Returns:
+    webdriver.Chrome: The Chrome browser instance.
+    """
     browser = webdriver.Chrome(options=create_browser_options())
     browser.get(url)
     return browser
 
 
 def get_html_soup(browser):
+    """
+    Extracts HTML content from the browser page and returns a BeautifulSoup object.
+
+    Args:
+    browser (webdriver.Chrome): The Chrome browser instance.
+
+    Returns:
+    bs4.BeautifulSoup: The BeautifulSoup object representing the HTML content.
+    """
     html_content = browser.page_source
     soup = BeautifulSoup(html_content, "html.parser")
     browser.quit()
@@ -41,78 +65,101 @@ def get_html_soup(browser):
 
 
 def scroll_down(browser):
-    scroll_pause_time = 30
-    screen_height = browser.execute_script("return window.screen.height;")
-    i = 1
+    """
+    Scrolls down the webpage to load additional content dynamically.
+
+    Args:
+    browser (webdriver.Chrome): The Chrome browser instance.
+    """
+    scroll_pause_time = 2
+    last_height = browser.execute_script("return document.body.scrollHeight")
+    retries = 5  # Number of retries if no new content is loaded
+
     while True:
-        browser.execute_script(
-            "window.scrollTo(0, {screen_height}*{i});".format(
-                screen_height=screen_height, i=i
-            )
-        )
-        i += 1
-        time.sleep(scroll_pause_time)
-        scroll_height = browser.execute_script("return document.body.scrollHeight;")
-        if (screen_height) * i > scroll_height:
-            break
+        browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(scroll_pause_time)  # Allow time for the page to load
+        new_height = browser.execute_script("return document.body.scrollHeight")
+
+        if new_height == last_height:
+            if retries > 0:
+                retries -= 1
+                time.sleep(scroll_pause_time)
+                # Try scrolling again
+                continue
+            else:
+                # Break the loop if retries are exhausted and no new content is loaded
+                break
+        else:
+            retries = 3  # Reset retries if new content has been loaded
+            last_height = new_height
 
 
-def get_videos_section_html(soup):
-    videos_section_divs = soup.find(
-        "div", {"class": "css-1qb12g8-DivThreeColumnContainer eegew6e2"}
-    )
-    return videos_section_divs
+def extract_video_links(videos_section_divs):
+    """
+    Extracts video links from the given section of HTML content.
+
+    Args:
+    videos_section_divs (bs4.element.Tag): The BeautifulSoup Tag representing the section containing video links.
+
+    Returns:
+    list: A list of video links.
+    """
+    if not videos_section_divs:
+        return []
+    video_links = []
+    for video_div in videos_section_divs.find_all(
+        "div", class_="css-x6y88p-DivItemContainerV2 e19c29qe8"
+    ):
+        a_tag = video_div.find("a", href=True)
+        if a_tag and "tiktok.com" in a_tag["href"]:
+            video_links.append(a_tag["href"])
+    return video_links
 
 
-def extract_videos_links(videos_section_divs):
-    videos_links = []
-    if videos_section_divs:
-        videos_divs = videos_section_divs.find_all(
-            "div", {"class": "css-x6y88p-DivItemContainerV2 e19c29qe8"}
-        )
-        for video_div in videos_divs:
-            video_link = video_div.find(
-                "a", href=lambda href: href and "tiktok.com" in href
-            )["href"]
-            videos_links.append(video_link)
-    return videos_links
+def calculate_downloaded_videos():
+    """
+    Calculates the number of videos already downloaded.
+
+    Returns:
+    int: The number of downloaded videos.
+    """
+    try:
+        return len([f for f in os.listdir(DOWNLOADED_VIDS_DIR) if f.endswith(".mp4")])
+    except Exception as e:
+        print(f"Error accessing directory: {e}")
+        return 0
 
 
-def calcuate_downloaded_videos():
-    total_videos = len(os.listdir(DOWNLOADED_VIDS_DIR))
-    return total_videos
+def wait_for_download(num_vids_before, max_retries=10):
+    """
+    Waits for new videos to be downloaded, retrying a specified number of times.
 
-
-def wait_for_download(num_vids_before):
-    """Wait for download tiktok completely"""
-    while True:
-        time.sleep(1)  # Check every second
-        current_vids = calcuate_downloaded_videos()
+    Args:
+    num_vids_before (int): Number of videos before starting the download.
+    max_retries (int): Maximum number of retries to wait for the download to complete. Default is 10.
+    """
+    retries = 0
+    while retries < max_retries:
+        time.sleep(1)  # Wait for 1 second before checking again
+        current_vids = calculate_downloaded_videos()
         print("current_vids: ", current_vids)
-        files = [f.endswith(".mp4") for f in os.listdir(DOWNLOADED_VIDS_DIR)]
-        if current_vids > num_vids_before and all(files):
+        if current_vids > num_vids_before:
             print(f"Video downloaded successfully! Total videos: {current_vids}")
-            break
+            return
+        retries += 1
+    print("Reached maximum retries without downloading all videos.")
 
 
 def download_video(url):
-    num_vids_before = calcuate_downloaded_videos()
-    adblock_path = "src/scraper/adblocker.crx"
+    """
+    Downloads a video from the specified URL.
 
-    options = Options()
-    options.add_extension(adblock_path)
+    Args:
+    url (str): The URL of the video to download.
+    """
+    num_vids_before = calculate_downloaded_videos()
 
-    options.add_argument("start-maximized")
-    options.add_argument("disable-infobars")
-    options.add_argument("--disable-extensions")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--no-sandbox")
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_experimental_option("useAutomationExtension", False)
-    options.add_argument(
-        "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
-    )
+    options = create_browser_options()
     options.add_experimental_option(
         "prefs",
         {
@@ -150,7 +197,13 @@ def download_video(url):
 
 
 def random_delay():
-    """Adding Random delay to mimic the human behaviour"""
+    """
+    Adds a random delay to mimic human behavior.
+    """
+    # Random float between 5 and 10 seconds
+    delay = random.uniform(5, 10)
+    time.sleep(delay)
+    print("Resuming operation.")
     # Random float between 5 and 10 seconds
     delay = random.uniform(5, 10)
     time.sleep(delay)
@@ -158,34 +211,38 @@ def random_delay():
 
 
 def scrape_tiktok_video_links(url):
-    driver = open_url(url)
+    """
+    Scrapes TikTok video links from the specified URL.
 
+    Args:
+    url (str): The URL of the TikTok page.
+
+    Returns:
+    list: A list of TikTok video links.
+    """
+    driver = open_url(url)
     # Wait 30 seconds to solve CAPTCHA manually
     time.sleep(30)
-
     scroll_down(driver)
-
     # Get HTML soup after scrolling
     html_soup = get_html_soup(driver)
 
     # Continue with scraping
-    videos_section_divs = get_videos_section_html(html_soup)
-    videos_links = extract_videos_links(videos_section_divs)
+    videos_section_divs = html_soup.find(
+        "div", {"class": "css-1qb12g8-DivThreeColumnContainer eegew6e2"}
+    )
+    videos_links = extract_video_links(videos_section_divs)
 
     return videos_links
 
 
-def download_videos(videos_links):
-    for video_num, video_link in enumerate(videos_links):
-        """TODO: REMOVE THIS LINE AFTER TESTING"""
-        if video_num > 10:
-            break
-        print(video_link)
-        download_video(video_link)
-        random_delay()
-
-
 def download_tiktok_videos(url):
+    """
+    Downloads TikTok videos from the specified URL.
+
+    Args:
+    url (str): The URL of the TikTok page containing videos to download.
+    """
     videos_links = scrape_tiktok_video_links(url)
     for video_link in videos_links:
         print(f"Downloading video from {video_link}")

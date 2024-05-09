@@ -202,53 +202,59 @@ def video_processing_motion(dist):
 
 
 def simple_vqa_infer(video_path):
+    try:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        print(f"Processing on {device}")
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Processing on {device}")
+        model_motion = slowfast()
+        model_motion = model_motion.to(device)
 
-    model_motion = slowfast()
-    model_motion = model_motion.to(device)
+        model = UGC_BVQA_model.resnet50(pretrained=False)
+        model = torch.nn.DataParallel(model)
+        model = model.to(device=device)
 
-    model = UGC_BVQA_model.resnet50(pretrained=False)
-    model = torch.nn.DataParallel(model)
-    model = model.to(device=device)
+        try:
+            model.load_state_dict(
+                torch.load(MODEL_PATH, map_location=torch.device(device))
+            )
+        except Exception as e:
+            print(f"Error loading model state dict: {e}")
+            return
 
-    model.load_state_dict(torch.load(MODEL_PATH, map_location=torch.device(device)))
+        video_dist_spatial, video_name = video_processing_spatial(video_path)
+        video_dist_motion, video_name = video_processing_motion(video_path)
 
-    video_dist_spatial, video_name = video_processing_spatial(video_path)
-    video_dist_motion, video_name = video_processing_motion(video_path)
+        with torch.no_grad():
+            model.eval()
 
-    with torch.no_grad():
-        model.eval()
+            video_dist_spatial = video_dist_spatial.to(device)
+            video_dist_spatial = video_dist_spatial.unsqueeze(dim=0)
 
-        video_dist_spatial = video_dist_spatial.to(device)
-        video_dist_spatial = video_dist_spatial.unsqueeze(dim=0)
+            n_clip = len(video_dist_motion)
+            feature_motion = torch.zeros([n_clip, 2048 + 256])
 
-        n_clip = len(video_dist_motion)
-        feature_motion = torch.zeros([n_clip, 2048 + 256])
+            for idx, ele in enumerate(video_dist_motion):
+                ele = ele.unsqueeze(dim=0)
+                ele = ele.permute(0, 2, 1, 3, 4)
+                ele = pack_pathway_output(ele, device)
+                ele_slow_feature, ele_fast_feature = model_motion(ele)
 
-        for idx, ele in enumerate(video_dist_motion):
-            ele = ele.unsqueeze(dim=0)
-            ele = ele.permute(0, 2, 1, 3, 4)
-            ele = pack_pathway_output(ele, device)
-            ele_slow_feature, ele_fast_feature = model_motion(ele)
+                ele_slow_feature = ele_slow_feature.squeeze()
+                ele_fast_feature = ele_fast_feature.squeeze()
 
-            ele_slow_feature = ele_slow_feature.squeeze()
-            ele_fast_feature = ele_fast_feature.squeeze()
+                ele_feature_motion = torch.cat([ele_slow_feature, ele_fast_feature])
+                ele_feature_motion = ele_feature_motion.unsqueeze(dim=0)
 
-            ele_feature_motion = torch.cat([ele_slow_feature, ele_fast_feature])
-            ele_feature_motion = ele_feature_motion.unsqueeze(dim=0)
+                feature_motion[idx] = ele_feature_motion
 
-            feature_motion[idx] = ele_feature_motion
+            feature_motion = feature_motion.unsqueeze(dim=0)
+            print(feature_motion.shape)
+            print(video_dist_spatial.shape)
+            outputs = model(video_dist_spatial, feature_motion)
+            print("output: ", outputs)
+            y_val = outputs.item()
 
-        print("feature_motion: ", feature_motion)
-
-        feature_motion = feature_motion.unsqueeze(dim=0)
-        print(feature_motion.shape)
-        print(video_dist_spatial.shape)
-        outputs = model(video_dist_spatial, feature_motion)
-
-        y_val = outputs.item()
-
-        print("The video name: " + video_name)
-        print("The quality socre: {:.4f}".format(y_val))
+            print("The video name: " + video_name)
+            print("The quality socre: {:.4f}".format(y_val))
+    except Exception as e:
+        print(e)
