@@ -253,4 +253,4 @@ def simple_vqa_infer(video_path):
             return y_val
 
     except Exception as e:
-        return e
+        return f"Failed to process: {e}"
