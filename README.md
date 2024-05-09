@@ -62,4 +62,40 @@ Each list element represents a video and against each video following metrics ar
 - **laplacian:** A measure of image sharpness. The quality_score represents the level of blurriness, with higher values indicating a sharper image. 
 - **structural_similarty:** A metric that measures the similarity between two images. The quality_score represents the similarity between the original and processed images, with higher values indicating a higher similarity. 
 - **peak_signal_to_noise_ratio:** A metric that measures the ratio of the maximum possible power of a signal to the power of corrupting noise. The quality_score represents the PSNR value, with higher values indicating a higher quality image.
-![alt text](diagram/output.png)
+
+```
+[
+    {
+        "ssstik.io_1715156633074.mp4": {
+            "laplacian": {
+                "quality_score": 53.257578720245895,
+                "quality": "Blur"
+            },
+            "structural_similarty": {
+                "quality_score": 0.7905307352416306,
+                "quality": "Clear"
+            },
+            "peak_signal_to_noise_ratio": {
+                "quality_score": 32.663645218665536,
+                "quality": "Clear"
+            }
+        }
+    },
+    {
+        "ssstik.io_1715156596076.mp4": {
+            "laplacian": {
+                "quality_score": 25.011922787196852,
+                "quality": "Blur"
+            },
+            "structural_similarty": {
+                "quality_score": 0.8358675813388196,
+                "quality": "Clear"
+            },
+            "peak_signal_to_noise_ratio": {
+                "quality_score": 32.46371983910255,
+                "quality": "Clear"
+            }
+        }
+    }
+]
+```
