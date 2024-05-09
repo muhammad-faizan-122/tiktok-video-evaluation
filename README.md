@@ -2,9 +2,12 @@
 An automated process has been implemented for downloading videos from TikTok and assessing each video's quality in terms of clarity or blurriness.
 
 ## Working
-Task can be divided into parts
+
+Pipeline can be divided into parts
 - Scraping and dowloading tiktok videos
 - Quality evaluation of each downloaded video
+
+![alt text](diagram/block_diagram.png)
 
 ### Scraping and dowloading tiktok videos
 I have utilized the selenium and beautiful soap libraries of Python to automate scraping and downloading TikTok videos. A Captcha appears at the start of scraping, which need to solve manually within 30 seconds.
@@ -53,3 +56,10 @@ Use of traditional and deep learning algorithm to check the quality of each down
     python3 main.py
     ```
 - You must need to solve the Captcha of tiktok within 30 seconds.
+
+## Output
+Each list element represents a video and against each video following metrics are calculated:
+- **laplacian:** A measure of image sharpness. The quality_score represents the level of blurriness, with higher values indicating a sharper image. 
+- **structural_similarty:** A metric that measures the similarity between two images. The quality_score represents the similarity between the original and processed images, with higher values indicating a higher similarity. 
+- **peak_signal_to_noise_ratio:** A metric that measures the ratio of the maximum possible power of a signal to the power of corrupting noise. The quality_score represents the PSNR value, with higher values indicating a higher quality image.
+![alt text](diagram/output.png)
